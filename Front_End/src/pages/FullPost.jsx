@@ -5,6 +5,7 @@ import { Index } from "../components/AddComment";
 import { CommentsBlock } from "../components/CommentsBlock";
 import { useParams } from "react-router-dom";
 import axios from "../axios";
+import reactMarkdown from "react-markdown";
 
 export const FullPost = () => {
   const [post, setPost] = React.useState()
@@ -34,7 +35,7 @@ export const FullPost = () => {
       <Post
         id={post._id}
         title={post.title}
-        imageUrl={post.image}
+        imageUrl={post.image && `http://localhost:4000/${post.image}`}
         user={{
           avatarUrl: post.author.avatar,
           fullName: post.author.fullName,
@@ -45,7 +46,7 @@ export const FullPost = () => {
         tags={post.tags}
         isFullPost
       >
-        <p>{post.text}</p>
+       <reactMarkdown children={post.text}/>
       </Post>
       <CommentsBlock
         items={[

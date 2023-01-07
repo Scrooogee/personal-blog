@@ -4,7 +4,7 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import SimpleMDE from 'react-simplemde-editor';
 import { useSelector } from 'react-redux';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 
 import 'easymde/dist/easymde.min.css';
 import styles from './AddPost.module.scss';
@@ -12,17 +12,17 @@ import axios from '../../axios';
 
 export const AddPost = () => {
 
+  const navigate = useNavigate();
   const isAuth = useSelector((state) => Boolean(state.AuthReducer.data))
  
+  const [isLoading, setLoading] = React.useState(false);
 
+  const [text, setText] = React.useState('');
+  const [title, setTitel]= React.useState('');
+  const [tags, setTags]= React.useState('');
 
-  const [value, setValue] = React.useState('');
-  const [title, setTitel]= React.useState('')
-  const [tags, setTags]= React.useState('')
+  const [image, setImage] = React.useState('')
 
-  const [imageUrl, setImageUrl] = React.useState('')
-
-  console.log(imageUrl)
 
   const inputFileRef = React.useRef(null);
 
@@ -34,8 +34,7 @@ export const AddPost = () => {
       formData.append('image', file)
 
       const {data} = await axios.post('/upload', formData)
-      console.log(data)
-      setImageUrl(data)
+      setImage(data)
 
     } catch (error) {
       console.log(error)
@@ -43,14 +42,35 @@ export const AddPost = () => {
   };
 
   const onClickRemoveImage = () => {
-    setImageUrl('')
+    setImage('')
   };
 
-  const onChange = React.useCallback((value) => {
-    setValue(value);
+  const onChange = React.useCallback((text) => {
+    setText(text);
   }, []);
 
+  const onSubmit = async () => {
+    try {
+      setLoading(true)
 
+      const fields = {
+        title,
+        image,
+        tags,
+        text
+      }
+
+      const {data} = await axios.post('/posts', fields);
+
+      const id = data._id
+
+      navigate(`/posts/${id}`)
+
+    } catch (error) {
+      console.warn(error)
+      alert('Something wrong! Try again...')
+    }
+  }
 
   const options = React.useMemo(
     () => ({
@@ -77,12 +97,12 @@ export const AddPost = () => {
         Add image
       </Button>
       <input ref={inputFileRef} type="file" onChange={handleChangeFile} hidden />
-      {imageUrl && (
+      {image && (
         <>
           <Button variant="contained" color="error" onClick={onClickRemoveImage}>
             Delete image
           </Button>
-          <img className={styles.image} src={`http://localhost:4000/${imageUrl}`} alt="Uploaded" />
+          <img className={styles.image} src={`http://localhost:4000/${image}`} alt="Uploaded" />
         </>
       )}
       <br />
@@ -105,11 +125,11 @@ export const AddPost = () => {
       />
       <SimpleMDE 
       className={styles.editor} 
-      value={value} 
+      value={text} 
       onChange={onChange} 
       options={options} />
       <div className={styles.buttons}>
-        <Button size="large" variant="contained">
+        <Button onClick={onSubmit} size="large" variant="contained">
           Add post
         </Button>
         <a href="/">
