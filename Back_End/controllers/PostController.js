@@ -1,9 +1,22 @@
 import PostModel from "../models/Post.js"
+import ComentModel from '../models/Coment.js'
 
 export const GetAll = async (req, res) => {
     try {
         const posts = await PostModel.find().populate('author').exec()
-        res.json(posts)
+        res.json(posts.sort((oldPost, newPost) => newPost.createdAt - oldPost.createdAt))
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            massage: 'Faild to found the post'
+        })
+    }
+};
+
+export const GetPopular = async (req, res) => {
+    try {
+        const posts = await PostModel.find().populate('author').exec()
+        res.json(posts.sort((minViews, maxViews) => maxViews.viewsCount - minViews.viewsCount))
     } catch (error) {
         console.log(error)
         res.status(500).json({
@@ -19,7 +32,7 @@ export const Create = async (req, res) => {
             title: req.body.title,
             text: req.body.text,
             image: req.body.image,
-            tags: req.body.tags,
+            tags: req.body.tags.split(','),
             author: req.userId
         });
 
@@ -64,7 +77,7 @@ export const GetOne = async (req, res) => {
 
                 res.json(doc)
             }
-        )
+        ).populate('author')
     } catch (error) {
         console.log(error)
         res.status(500).json({
@@ -123,7 +136,7 @@ export const Update = async (req, res) => {
                 title: req.body.title,
                 text: req.body.text,
                 image: req.body.image,
-                tags: req.body.tags,
+                tags: req.body.tags.split(','),
                 author: req.userId
             }
         );
@@ -142,14 +155,65 @@ export const Update = async (req, res) => {
 export const GetLastTags = async (req, res) => {
     try {
         const posts = await PostModel.find().limit(5).exec()
-
-        const tags = posts.map(obj => obj.tags).flat().slice(0, 5)
+        const popularPosts =  posts.sort((minViews, maxViews) => maxViews.viewsCount - minViews.viewsCount)
+        const tags = popularPosts.map(obj => obj.tags).flat().slice(0, 5)
         
         res.json(tags)
     } catch (error) {
         console.log(error)
         res.status(500).json({
             massage: 'Faild to found the post'
+        })
+    }
+}
+
+export const GetComents = async (req, res) => {
+
+    try {
+        const coments = await ComentModel.find().populate('author').exec()
+        console.log(coments)
+        res.send(coments.sort((oldComents, newComents) => newComents.createdAt - oldComents.createdAt))
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            massage: 'Faild to found the coments'
+        })
+    }
+}
+
+export const CreateComents = async (req, res) => {
+    const postId = req.params.id
+    try {
+        const doc = new ComentModel({
+            text: req.body.text,
+            author: req.userId,
+            post: postId
+        })
+
+        // console.log(doc)
+        const coment = await doc.save();
+
+        const post = await PostModel.findByIdAndUpdate(
+            {
+                _id: postId,
+            },
+            {
+                $push: {coments: coment}
+            }
+        );
+
+        post.coments.push(coment)
+
+        res.json({
+            succes: true
+        })
+        
+
+        // res.send(coment)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({
+            massage: 'Faild to create the coments'
         })
     }
 }

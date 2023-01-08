@@ -4,10 +4,10 @@ import multer from 'multer';
 import cors from 'cors';
 
 
-import { registerValidation, postValidation } from './validations/index.js';
+import { registerValidation, postValidation, comentValidation } from './validations/index.js';
 import { checkAuth } from './utils/index.js';
 import { Register, Login, AuthMe } from './controllers/UserController.js';
-import { Create, GetAll, GetOne, Remove, Update, GetLastTags } from './controllers/PostController.js';
+import { Create, GetAll, GetOne, Remove, Update, GetLastTags, GetPopular, CreateComents, GetComents } from './controllers/PostController.js';
 import handleValidationErrors from './utils/handleValidationErrors.js';
 
 
@@ -51,10 +51,17 @@ app.get('/tags',  GetLastTags);
 
 app.post('/posts', checkAuth, postValidation, Create);
 app.get('/posts', GetAll);
+app.get('/posts/popular', GetPopular)
 app.get('/posts/tags',  GetLastTags);
 app.get('/posts/:id', GetOne);
 app.delete('/posts/:id', checkAuth, Remove);
 app.patch('/posts/:id', checkAuth, postValidation, Update);
+
+app.post('/posts/:id/coment', checkAuth, comentValidation, CreateComents);
+app.get('/posts/:id/coment', GetComents);
+
+
+
 
 
 

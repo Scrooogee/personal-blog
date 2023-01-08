@@ -24,6 +24,11 @@ const PostSchema = new mongoose.Schema(
             ref: 'User',
             required: true
         },
+        coments: {
+            type: Array,
+            default: [],
+            required: true
+        },
         image: String
     },
 
