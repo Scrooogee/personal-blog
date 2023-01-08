@@ -52,7 +52,7 @@ export const Home = () => {
               }}
               createdAt={obj.createdAt}
               viewsCount={obj.viewsCount}
-              commentsCount={3}
+              commentsCount={obj.coments.length}
               tags={obj.tags}
               isEditable={userData?._id === obj.author._id}
               isLoading={false}

@@ -4,7 +4,7 @@ import Paper from '@mui/material/Paper';
 import Button from '@mui/material/Button';
 import SimpleMDE from 'react-simplemde-editor';
 import { useSelector } from 'react-redux';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 
 import 'easymde/dist/easymde.min.css';
 import styles from './AddPost.module.scss';
@@ -17,6 +17,10 @@ export const AddPost = () => {
  
   const [isLoading, setLoading] = React.useState(false);
 
+  const {id} = useParams()
+
+  const isEdit = Boolean(id)
+
   const [text, setText] = React.useState('');
   const [title, setTitel]= React.useState('');
   const [tags, setTags]= React.useState('');
@@ -25,6 +29,29 @@ export const AddPost = () => {
 
 
   const inputFileRef = React.useRef(null);
+
+  React.useEffect(() => {
+    (async() => {
+
+      try {
+        if (id) {
+          const {data} = await axios.get(`/posts/${id}`);
+
+          setText(data.text);
+          setTitel(data.title);
+          setTags(data.tags.join(', '));
+          setImage(data.image);
+
+          console.log(data.tags.join(', '))
+        }
+        
+      } catch (error) {
+        console.log(error)
+        alert('Could not find the poxt!')
+      }
+
+    })()
+  }, [id])
 
   const handleChangeFile = async (event) => {
     try {
@@ -51,7 +78,7 @@ export const AddPost = () => {
 
   const onSubmit = async () => {
     try {
-      setLoading(true)
+      // setLoading(true)
 
       const fields = {
         title,
@@ -60,11 +87,13 @@ export const AddPost = () => {
         text
       }
 
-      const {data} = await axios.post('/posts', fields);
+      const {data} = isEdit ? 
+        await axios.patch(`/posts/${id}`, fields) :
+        await axios.post('/posts', fields);
+      
+      const _id = isEdit? id: data._id
+      navigate(`/posts/${_id}`)
 
-      const id = data._id
-
-      navigate(`/posts/${id}`)
 
     } catch (error) {
       console.warn(error)
@@ -116,7 +145,7 @@ export const AddPost = () => {
         fullWidth
       />
       <TextField 
-      alue={tags}
+      value={tags}
       onChange={(e) => setTags(e.target.value)}
       classes={{ root: styles.tags }} 
       variant="standard" 
@@ -130,7 +159,7 @@ export const AddPost = () => {
       options={options} />
       <div className={styles.buttons}>
         <Button onClick={onSubmit} size="large" variant="contained">
-          Add post
+          {isEdit ? 'Edit' : 'Add post'}
         </Button>
         <a href="/">
           <Button size="large">Cancel</Button>

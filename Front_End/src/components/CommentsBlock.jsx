@@ -1,4 +1,6 @@
 import React from "react";
+import axios from "../axios";
+import { useParams } from "react-router-dom";
 
 import { SideBlock } from "./SideBlock";
 import ListItem from "@mui/material/ListItem";
@@ -9,18 +11,20 @@ import Divider from "@mui/material/Divider";
 import List from "@mui/material/List";
 import Skeleton from "@mui/material/Skeleton";
 
-export const CommentsBlock = ({ items, children, isLoading = true }) => {
+export const CommentsBlock = ({ thisComents, children, isLoading = true }) => {
+
   return (
     <SideBlock title="Comments">
+      {children}
       <List>
-        {(isLoading ? [...Array(5)] : items).map((obj, index) => (
+        {(isLoading ? [...Array(5)] : thisComents).map((obj, index) => (
           <React.Fragment key={index}>
             <ListItem alignItems="flex-start">
               <ListItemAvatar>
                 {isLoading ? (
                   <Skeleton variant="circular" width={40} height={40} />
                 ) : (
-                  <Avatar alt={obj.user.fullName} src={obj.user.avatarUrl} />
+                  <Avatar alt={obj.author.fullName} src={obj.author.avatarUrl} />
                 )}
               </ListItemAvatar>
               {isLoading ? (
@@ -30,7 +34,7 @@ export const CommentsBlock = ({ items, children, isLoading = true }) => {
                 </div>
               ) : (
                 <ListItemText
-                  primary={obj.user.fullName}
+                  primary={obj.author.fullName}
                   secondary={obj.text}
                 />
               )}
@@ -39,7 +43,6 @@ export const CommentsBlock = ({ items, children, isLoading = true }) => {
           </React.Fragment>
         ))}
       </List>
-      {children}
     </SideBlock>
   );
 };

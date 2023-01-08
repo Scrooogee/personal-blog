@@ -3,7 +3,7 @@ import React from "react";
 import { Post } from "../components/Post";
 import { Index } from "../components/AddComment";
 import { CommentsBlock } from "../components/CommentsBlock";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "../axios";
 import reactMarkdown from "react-markdown";
 
@@ -13,11 +13,20 @@ export const FullPost = () => {
 
   const { id } = useParams()
 
+  const [coments, setComents] = React.useState([])
+  const thisComents = coments.filter(com => com.post === id)
+  const [comment, setComment] = React.useState('')
+
+
   React.useEffect(() => {
     try {
       (async() => {
-        const {data} = await axios.get(`/posts/${id}`)
-        setPost(data)
+        const post = await axios.get(`/posts/${id}`);
+        const coments = await axios.get(`/posts/${id}/coment`);
+        
+        setPost(post.data)
+        setComents(coments.data)
+
         setLoading(false)
       })()
     } catch (error) {
@@ -25,6 +34,31 @@ export const FullPost = () => {
     }
     
   }, [id])
+
+  
+  
+  const onSubmit = async () => {
+
+    try {
+
+      const fields = {
+        text: comment
+      }
+
+      await axios.post(`/posts/${id}/coment`, fields)
+      const post = await axios.get(`/posts/${id}`);
+      const coments = await axios.get(`/posts/${id}/coment`);
+      
+      setComment('')
+      setPost(post.data)
+      setComents(coments.data)
+      
+    } catch (error) {
+      console.warn(error)
+      alert('Something wrong! Try again...')
+    }
+      
+  };
 
   if (loading) {
     return <Post isLoading={{loading}}/>
@@ -42,32 +76,22 @@ export const FullPost = () => {
         }}
         createdAt={post.createdAt}
         viewsCount={post.viewsCount}
-        commentsCount={3}
+        commentsCount={post.coments.length}
         tags={post.tags}
         isFullPost
       >
        <reactMarkdown children={post.text}/>
       </Post>
       <CommentsBlock
-        items={[
-          {
-            user: {
-              fullName: "Вася Пупкин",
-              avatarUrl: "https://mui.com/static/images/avatar/1.jpg",
-            },
-            text: "Это тестовый комментарий 555555",
-          },
-          {
-            user: {
-              fullName: "Иван Иванов",
-              avatarUrl: "https://mui.com/static/images/avatar/2.jpg",
-            },
-            text: "When displaying three lines or more, the avatar is not aligned at the top. You should set the prop to align the avatar at the top",
-          },
-        ]}
+      
+        thisComents={thisComents}
         isLoading={false}
       >
-        <Index />
+        <Index 
+        onSubmit={onSubmit}
+        comment={comment}
+        setComment={setComment}
+        />
       </CommentsBlock>
     </>
   );
